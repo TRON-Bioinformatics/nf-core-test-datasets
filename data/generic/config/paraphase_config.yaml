@@ -1,0 +1,13 @@
+PRODH:
+  genes: PRODH
+  realign_region: chr22:18912281-18936793
+  extract_regions: chr22:18912282-18936793 chr22_KI270734v1_random:137587-162092
+  left_boundary: 18912283
+  right_boundary: 18936792
+  expect_cn2: True
+  noisy_region: [[18913128, 18913160], [18921716, 18921743]]
+RIMBP3B:
+  genes: RIMBP3B,RIMBP3,RIMBP3C
+  realign_region: chr22:21380000-21390000
+  extract_regions: chr22:21380000-21390000 chr22:21544835-21554839 chr22:18605293-18615282
+

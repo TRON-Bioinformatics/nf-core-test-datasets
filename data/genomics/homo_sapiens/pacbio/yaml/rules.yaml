@@ -1,0 +1,6 @@
+PRODH:
+  rules:
+    - when:
+        total_cn: { "==": 2 }
+      status: "pathological"
+      reason: "Copy number is two"

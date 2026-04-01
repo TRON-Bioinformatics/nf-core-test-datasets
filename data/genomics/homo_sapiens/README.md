@@ -65,16 +65,14 @@ Following 'reference' vcf files are generated. All found in igenomes at `s3://ng
 
 4. justhusky_minimal.vcf.gz and associated files justhusky_minimal.vcf.gz.tbi and justhusky.ped is a subsampled minimal example vcf/ped combination made for testing family-related modules. justhusky_minimal.vcf.gz.tbi was generated with tabix.
 
+5. `vcf/chr21/simulated_sv.vcf.gz` and `vcf/chr21/simulated2_sv.vcf.gz` are simulated with `SURVIVOR simSV ../../../genome/chr21/genomes.fasta parameters.txt 0 0 $FILE_PREFIX`. The parameters file was created with `SURVIVOR simSV parameters.txt` and adjusted to create 15 duplications, 5 indels, 26 inversions, 20 inversion deletions and 15 inversion duplications. The headers were adjusted to be compatible with most tools (added a samplename and some missing fields), sorted with `bcftools`, bgzipped with `bgzip` and indexed with `tabix`.
+
 ### Fasta
 
-As base reference `s3://ngi-igenomes/igenomes/Homo_sapiens/GATK/GRCh38/Sequence/Chromosomes/chr22.fasta` was used.
+As base reference `s3://ngi-igenomes/igenomes/Homo_sapiens/GATK/GRCh38/Sequence/Chromosomes/chr22.fasta` was used, then compressed and indexed.
 
 ```bash
 samtools faidx chr22.fasta chr22:16570000-16610000  > genome.fasta
-```
-The corresponding compressed fasta and index files:
-
-```bash
 bgzip genome.fasta
 samtools faidx genome.fasta.gz
 ```
@@ -93,8 +91,19 @@ gatk BedToIntervalList -I genome.bed -SD genome.dict -O genome.interval_list
 
 A StrTableFile zip folder was created using GATK4:
 
-````bash
+```bash
 gatk ComposeSTRTableFile --reference genome.fasta --output genome_strtablefile.zip
+```
+
+For parallelization purpose a fasta with both chr21 and chr22 is obtain with
+
+```bash
+REF_PATH="data/genomics/homo_sapiens/genome/genomeGRCh38"
+wget -c -O- https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz | gunzip | bgzip  > ${REF_PATH}.fa.bgz
+samtools faidx ${REF_PATH}.fa.bgz chr21 chr22 | bgzip > ${REF_PATH}_chr21_22.fa.gz
+samtools faidx ${REF_PATH}_chr21_22.fa.gz
+rm ${REF_PATH}.fa.bgz*
+```
 
 ### SDF
 
@@ -103,7 +112,7 @@ An SDF folder of the reference FASTA of chromosome 21 was created using:
 ```bash
 rtg format -o genome_sdf genome.fasta
 tar -czf genome_sdf.tar.gz genome_sdf/
-````
+```
 
 ### GTF/GFF
 
@@ -138,6 +147,8 @@ Downloaded the gtf and gff3 files from Ensembl:
 6. Replace spaces with tabs
 7. The coordinates in `genome.gtf` were adapted to start from 1, and the last entries that ended in coordinates >40000 were adapted to end at coordinate 40000.
 
+`genome_minimal.gtf` is a small subset of the GTF containing only the standard fields.
+
 ### VEP cache
 
 1. The Homo sapiens GRCh38 VEP cache was downloaded from the [VEP FTP site](http://ftp.ensembl.org/pub/release-106/variation/indexed_vep_cache/homo_sapiens_merged_vep_106_GRCh38.tar.gz) (see [Ensembl VEP Cache](https://www.ensembl.org/info/docs/tools/vep/script/vep_cache.html#cache) page for latest release).
@@ -145,6 +156,8 @@ Downloaded the gtf and gff3 files from Ensembl:
 1. chr_synonyms.txt was reduced to just chr22 using `sed "/chr22/d" chr_synonyms.txt`
 1. The contents should be `homo_sapiens/106_GRCh38/chr_synonyms.txt` and `homo_sapiens/106_GRCh38/info.txt`
 1. A tar was generated from the VEP cache folder using `tar -czvf vep/`.
+
+A similar process was done for the `vep_cache_113.tar.gz` file.
 
 ## Index files
 
@@ -156,7 +169,173 @@ The salmon index (`homo_sapiens/genome/index/salmon`) was created with the follo
 salmon index -t transcriptome.fasta -k 31 -i salmon
 ```
 
+### Genome map
+
+There is multiple type of genetic map depending on the softwares.
+They use the following columns separated by a tabulation or a space:
+  - chromosome
+  - variant id
+  - position
+  - combined_rate (cM/Mb)
+  - cM
+
+The genome map of GRCh38 have been generated as follow:
+
+```bash
+# Download the reference genome map
+MAP_GRCH38=data/genomics/homo_sapiens/genome/genetic_map/genome.GRCh38
+wget https://storage.googleapis.com/broad-alkesgroup-public/Eagle/downloads/tables/genetic_map_hg38_withX.txt.gz -O ${MAP_GRCH38}.eagle.map.gz
+wget --no-check-certificate https://bochet.gcc.biostat.washington.edu/beagle/genetic_maps/plink.GRCh38.map.zip -O ${MAP_GRCH38}.plink.map.zip
+
+for chr in 21 22; do
+   # Eagle / hapmap format
+   zcat ${MAP_GRCH38}.eagle.map.gz \
+   | awk -v CHR="$chr" 'BEGIN {OFS=" "} NR==1 {print; next} $1 == CHR {print $1,$2,$3,$4}' \
+   > ${MAP_GRCH38}.${chr}.eagle.map
+
+   # Stitch or quilt format
+   wget https://ftp.ncbi.nlm.nih.gov/hapmap/recombination/latest/rates/genetic_map_chr${chr}_b36.txt -O ${MAP_GRCH38}.chr${chr}.stitch.map
+
+   # Plink / bealge5 format
+   unzip -p ${MAP_GRCH38}.plink.map.zip chr_in_chrom_field/plink.chrchr${chr}.GRCh38.map > ${MAP_GRCH38}.chr${chr}.plink.map
+
+   # Minimac format
+   awk 'BEGIN {OFS="\t"} NR==1 {print "#chr", "position", "Genetic_Map(cM)"} NR>1  {print $1, $4, $3}' \
+      ${MAP_GRCH38}.chr${chr}.plink.map > ${MAP_GRCH38}.chr${chr}.minimac.map
+
+   # Glimpse format
+   awk 'BEGIN {OFS="\t"} NR==1 {print "pos", "chr", "cM"} NR>1  {print $4, $1, $3}' \
+      ${MAP_GRCH38}.chr${chr}.plink.map > ${MAP_GRCH38}.chr${chr}.glimpse.map
+
+   # Compress files
+   gzip ${MAP_GRCH38}.${chr}.eagle.map
+done
+
+rm ${MAP_GRCH38}.plink.map.zip
+rm ${MAP_GRCH38}.eagle.map.gz
+```
+
+## Alleles, Loci, GC and RT for `ASCAT`
+
+The reference files for ASCAT are obtained as follow
+
+```bash
+ASCAT_PATH=data/genomics/homo_sapiens/genome/ascat/
+wget https://zenodo.org/records/14008443/files/G1000_loci_WGS_hg38.zip -O ${ASCAT_PATH}G1000_loci_WGS_hg38.zip
+unzip ${ASCAT_PATH}G1000_loci_WGS_hg38.zip G1000_loci_hg38_chr21.txt -d ${ASCAT_PATH}
+unzip ${ASCAT_PATH}G1000_loci_WGS_hg38.zip G1000_loci_hg38_chr22.txt -d ${ASCAT_PATH}
+# Rename to chr
+for i in 21 22; do
+   cp ${ASCAT_PATH}G1000_loci_hg38_chr${i}.txt ${ASCAT_PATH}G1000_loci_hg38_${i}.txt
+   sed -i 's/^/chr/' ${ASCAT_PATH}G1000_loci_hg38_chr${i}.txt
+done
+
+wget https://zenodo.org/records/14008443/files/G1000_alleles_WGS_hg38.zip -O ${ASCAT_PATH}G1000_alleles_WGS_hg38.zip
+unzip ${ASCAT_PATH}G1000_alleles_WGS_hg38.zip G1000_alleles_hg38_chr21.txt -d ${ASCAT_PATH}
+unzip ${ASCAT_PATH}G1000_alleles_WGS_hg38.zip G1000_alleles_hg38_chr22.txt -d ${ASCAT_PATH}
+
+wget https://zenodo.org/records/14008443/files/GC_G1000_WGS_hg38.zip -O ${ASCAT_PATH}GC_G1000_WGS_hg38.zip
+unzip -p ${ASCAT_PATH}GC_G1000_WGS_hg38.zip GC_G1000_hg38.txt | awk 'NR==1 || $2 == 21' > ${ASCAT_PATH}GC_G1000_hg38_21.txt
+unzip -p ${ASCAT_PATH}GC_G1000_WGS_hg38.zip GC_G1000_hg38.txt | awk 'NR==1 || $2 == 22' > ${ASCAT_PATH}GC_G1000_hg38_22.txt
+
+wget https://zenodo.org/records/14008443/files/RT_G1000_WGS_hg38.zip -O ${ASCAT_PATH}RT_G1000_WGS_hg38.zip
+unzip -p ${ASCAT_PATH}RT_G1000_WGS_hg38.zip RT_G1000_hg38.txt | awk 'NR==1 || $2 == 21' > ${ASCAT_PATH}RT_G1000_hg38_21.txt
+unzip -p ${ASCAT_PATH}RT_G1000_WGS_hg38.zip RT_G1000_hg38.txt | awk 'NR==1 || $2 == 22' > ${ASCAT_PATH}RT_G1000_hg38_22.txt
+```
+
 ## Output data generation
+
+### Illumina data
+
+Some individual data are also needed. The following comes from the 1000 Genome Project and 'Genome in a Bottle'.
+We focus on the sample GM12878 also known as NA12878 or HG001 depending on the projects.
+
+We need its data in different format for the chromosome 22.
+
+```bash
+REGION_STRING="chr21:16570000-16610000 chr22:16570000-16610000"
+DIR_IND=data/genomics/homo_sapiens/illumina
+
+# Keep only the wanted region but might take some time to retrieve
+samtools view -bo $DIR_IND/bam/NA12878.chr21_22.bam \
+   ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR323/ERR3239334/NA12878.final.cram \
+   $REGION_STRING
+
+samtools view -bo $DIR_IND/bam/NA19401.chr21_22.bam \
+   ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR323/ERR3239749/NA19401.final.cram \
+   $REGION_STRING
+
+for sample in NA19401 NA12878; do
+
+   samtools index $DIR_IND/bam/$sample.chr21_22.bam
+
+   # Mean depth is approximately of 32X
+   FRAC_DEPTH=$(echo "scale=5; 1/32" | bc)
+   echo "Mean depth: 32X → Downsampling fraction: $FRAC_DEPTH"
+
+   # Downsample the file to 1X
+   samtools view \
+      -s 1${FRAC_DEPTH} \
+      -bo $DIR_IND/bam/$sample.chr21_22.1X.bam $DIR_IND/bam/$sample.chr21_22.bam
+   samtools index $DIR_IND/bam/$sample.chr21_22.1X.bam
+
+   # Impute the data with GLIMPSE2
+   for chr in chr21 chr22; do
+      PANEL_FILE=data/genomics/homo_sapiens/popgen/1000GP.$chr.vcf.gz
+      MAP_GRCH38=data/genomics/homo_sapiens/genome/genetic_map/genome.GRCh38.$chr.glimpse.map
+      GLIMPSE2_phase \
+         --bam-file $DIR_IND/bam/$sample.chr21_22.1X.bam \
+         --ind-name $sample \
+         --input-region $chr:16570000-16610000 \
+         --output-region $chr:16570000-16610000 \
+         --map $MAP_GRCH38 \
+         --reference $PANEL_FILE \
+         --output $DIR_IND/vcf/$sample.$chr.1X.glimpse2.vcf.gz
+
+      bcftools index $DIR_IND/vcf/$sample.$chr.1X.glimpse2.vcf.gz
+   done
+
+   # Concatenate the VCF files
+   bcftools concat -O z -o $DIR_IND/vcf/$sample.1X.glimpse2.vcf.gz \
+      $DIR_IND/vcf/$sample.chr21.1X.glimpse2.vcf.gz \
+      $DIR_IND/vcf/$sample.chr22.1X.glimpse2.vcf.gz
+
+   # Index the combined VCF
+   bcftools index $DIR_IND/vcf/$sample.chr21_22.1X.glimpse2.vcf.gz
+
+   rm $DIR_IND/vcf/$sample.chr*
+done
+
+# Variants benchmarking
+# Download the VCF file
+wget -c ftp://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/NA12878_HG001/NISTv4.2.1/GRCh38/HG001_GRCh38_1_22_v4.2.1_benchmark.vcf.gz -O $DIR_IND/NA12878.vcf.gz
+
+# Download the TBI file
+wget -c ftp://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/NA12878_HG001/NISTv4.2.1/GRCh38/HG001_GRCh38_1_22_v4.2.1_benchmark.vcf.gz.tbi -O $DIR_IND/NA12878.vcf.gz.tbi
+
+# Renaming sample file
+echo "HG001 NA12878" > sample_renaming.txt
+
+REGION_STRING="chr21:16570000-16610000,chr22:16570000-16610000"
+
+# Normalize and keep only rename variants ID
+bcftools norm -m +any $DIR_IND/NA12878.vcf.gz \
+      -r ${REGION_STRING} --threads 4 -Ov | \
+   bcftools reheader --samples sample_renaming.txt | \
+   bcftools annotate --threads 4 -Oz \
+      --set-id '%CHROM\:%POS\:%REF\:%FIRST_ALT' \
+      -o $DIR_IND/vcf/NA12878_GIAB.chr21_22.vcf.gz
+
+# Index the file
+bcftools index -f $DIR_IND/vcf/NA12878_GIAB.chr21_22.vcf.gz --threads 4
+rm $DIR_IND/NA12878.vcf.gz*
+```
+
+#### `CNVKIT` data
+
+From `illumina/cram/test2.paired_end.sorted.cram` and `illumina/cram/test.paired_end.sorted.cram`
+and using the `CNVKIT_BATCH` modules the `illumina/cram/test2.paired_end.sorted.cnr` and
+`illumina/cram/test2.paired_end.sorted.cns` was created.
 
 ### Plink data generations
 
@@ -166,7 +345,6 @@ salmon index -t transcriptome.fasta -k 31 -i salmon
 
 ```bash
 pplink --file test.rnaseq --make-bed --out test.rnaseq
-
 ```
 
 ### Sarek pipeline generation
@@ -254,7 +432,7 @@ The cram files were generated with
 
 `test_test2_paired_mutect2_calls.artifact-prior.tar.gz`:
 
-```
+```bash
 gatk LearnReadOrientationModel -I ..illumina/gatk/paired_mutect2_calls/test_test2_paired_mutect2_calls.f1r2.tar.gz -O test_test2_paired_mutect2_calls.artifact-prior.tar.gz
 ```
 
@@ -286,7 +464,7 @@ output files from VariantRecalibrator, contains recal, index and tranches files 
 
 #### GenomicsDB
 
-```
+```bash
 gatk GenomicsDBImport -V ../gvcf/test.genome.vcf --genomicsdb-workspace-path test_genomicsdb -L ../../genome/genome.interval_list
 ```
 
@@ -300,6 +478,14 @@ This advice also applies to test_pon_genomicsdb, which is generated using the vc
 #### Varlocripator
 
 Example scenario was retrieved from the [manual](https://varlociraptor.github.io/docs/calling/).
+
+#### MuSE
+
+Test file for `MuSE sump` was created by running MuSE locally on data from this repository:
+
+```bash
+MuSE/MuSE call -f genomics/homo_sapiens/genome/chr21/sequence/genome.fasta -O MuSE-call.chr21.hg38.paired_end.recal.MuSE genomics/homo_sapiens/illumina/bam/test2.paired_end.recalibrated.sorted.bam genomics/homo_sapiens/illumina/bam/test.paired_end.recalibrated.sorted.bam
+```
 
 ### 10X genomics scRNA-seq data
 
@@ -330,6 +516,11 @@ Data generation:
    seqtk sample -s100 pbmc_R2.fastq 100 > test_2.fastq
    ```
 
+#### universc
+
+The reference genome was processed using the cellranger v3.0.2.9001 available in the `nf-core/universc:1.2.5.1` container.
+It is now available in `10xgenomics/universc/` as `homo_sapiens_chr22_reference.tar.gz`.
+
 ### cooler test dataset
 
 The raw data were downloaded from https://github.com/open2c/cooler/tree/master/tests/data
@@ -343,11 +534,21 @@ with the exception of `frag.bed` that is crafted for the pairtools/restrict test
 
 The first 1000 raw reads were extracted from the [public Alzheimer dataset](https://downloads.pacbcloud.com/public/dataset/IsoSeq_sandbox/2020_Alzheimer8M_subset/alz.1perc.subreads.bam) using samtools.
 
-```
+```bash
 samtools view -h alz.1perc.subreads.bam|head -n 1006|samtools view -bh > alz.bam
 ```
 
 The lima, refine, clustered, singletons and gene models datasets were generated using the isoseq3 framework and TANA collapse.
+
+The mini dataset was generated from the public pacbio dataset [pbmc singlecell mini](https://downloads.pacbcloud.com/public/dataset/IsoSeq_sandbox/2022_pbmc_singlecell_mini/ccs.bam) where the primers where removed with LIMA following [this](https://isoseq.how/umi/examples.html) example from the official isoseq documentation. Then the reads were subsampled using samtools.
+
+```
+samtools view --subsample 0.01 --subsample-seed 42 -b output.5p--3p.bam > mini.5p--3p.bam
+```
+
+#### yaml
+
+Contains a rules file for the paraphrase module.
 
 ### Scramble test dataset
 
@@ -362,15 +563,121 @@ This test data contains:
    - test.cram.crai => The index of the CRAM file
    - test.bed => A BED file containing only the regions from chr11
 
-## Limitations
+### Popgen data
 
-1. Reads do not cover chromosome 6
+Population genetics simulated data (case-control) in PLINK binary format, compressed VCF and compressed BCF formats.
+Phased reference panel for imputation and phasing.
+For details about their simulation, see the specific README file.
+
+### PyPGx data
+
+Test data is provided containing specific loci for the pharmacogenetics gene CYP2D6 and pseudogene CYP2D7 on GRCh37.
+This dataset contains:
+   - illumina/bam/test.PGx.CYP2D6.bam => Reads belonging to human genome project sample HG00436 mapped to the CYP2D6 and CYP2D7 loci
+      -  22:42512500-42551883
+      -  22:42512500-42551883
+   - illumina/bam/test.PGx.CYP2D6.bam.bai => The index of the BAM file
+   - genome/genome.GRCh37.chr22.fasta.gz => A reference GRCh37 genome fasta file (bgzipped) containing chromosome 22
+
+### RNASeq data
+
+This folder contains `AnnotFilterRule.pm` which comes from [The Broad](https://data.broadinstitute.org/Trinity/CTAT_RESOURCE_LIB/AnnotFilterRule.pm) and is used for filtering in `starfusion`.
+
+### Gens test data
+
+These files are used to test the Gens input preprocessing module.
+
+#### Binned coverage
+
+This file was obtained from the following WGS processing pipeline: [SMD WGS pipeline](https://github.com/SMD-Bioinformatics-Lund/nextflow_wgs).
+
+`data/genomics/homo_sapiens/illumina/gatk/hg002_chr20_90000_to_100000.standardizedCR.tsv`
+
+The relevant pipeline commands. Inputs is an aligned BAM-file, and an interval file specifying 100bp bins. It also requires a GATK format panel of normal.
+
+```
+gatk CollectReadCounts \\
+   -I $bam -L $params.COV_INTERVAL_LIST \\
+   --interval-merging-rule OVERLAPPING_ONLY -O ${bam}.hdf5
+
+gatk --java-options "-Xmx30g" DenoiseReadCounts \\
+   -I ${bam}.hdf5 --count-panel-of-normals ${PON[sex]} \\
+   --standardized-copy-ratios ${id}.standardizedCR.tsv \\
+   --denoised-copy-ratios ${id}.denoisedCR.tsv
+```
+
+This output is then processed to retrieve only chromsome 20 entries in the positions 90,000 - 100,000.
+
+```
+grep -E "^@|^20" hg002.standardizedCR.tsv | awk '$2 >= 90000 && $2 <= 100000' > hg002_chr20_90000_to_100000.standardizedCR.tsv
+```
+
+#### SNV calls (gGVCF)
+
+This file was obtained from the following WGS processing pipeline: [SMD WGS pipeline](https://github.com/SMD-Bioinformatics-Lund/nextflow_wgs).
+
+`data/genomics/homo_sapiens/illumina/vcf/hg002_chr20_90000_to_100000.dnascope.gvcf.gz`
+
+Output from running DNA-scope on the aligned BAM file and then exacting the range 90000 to 100000 from chromosome 20.
+
+DNAscope is a reimplementation and slight improvement on GATK's HaplotypeCaller.
+
+Using masked hg38 as reference. Using base quality calibrated inputs.
+
+```
+sentieon driver \\
+   -r ${params.genome_file} \\
+   -q $bqsr \\
+   -i $bam \\
+   --algo DNAscope --emit_mode GVCF ${id}.dnascope.gvcf.gz
+```
+
+```
+zcat hg002.dnascope.gvcf.gz | grep -E "^#|^20" | awk '/^#/ || ($2 >= 90000 && $2 <= 100000>)' > hg002_chr20_90000_to_100000.dnascope.gvcf
+bgzip hg002_chr20_90000_to_100000.dnascope.gvcf
+tabix hg002_chr20_90000_to_100000.dnascope.gvcf.gz
+```
+
+#### B-allele frequency sampling locations
+
+* data/genomics/homo_sapiens/illumina/tab/gnomad_hg38_chr20_90000_to_100000.0.05.txt.gz
+
+Subset of the file https://github.com/SMD-Bioinformatics-Lund/gens/releases/download/v4.3.0/gnomad_hg38.0.05.txt.gz
+
+It is based on Gnomad (v2), where locations with an ALT allele frequency >= 0.05 is extracted. This file only contains the locations on these calls (i.e. col 1: chrom, col 2: position).
+
+Then the target range is extracted:
+
+```
+zcat gnomad_hg38.0.05.txt.gz | awk '$1 == 20 && ($2 >= 90000 && $2 <= 100000)' | gzip > gnomad_hg38_chr20_90000_to_100000.0.05.txt.gz
+```
+
+### stitchr test dataset
+
+TCR data was downloaded from [vdjdb](https://vdjdb.com/) on March 12th 2026. 
+
+### anarcii test dataset
+
+Stitchr/thimble was run on the first five entries of the stitchr test dataset. The results were transformed into a fasta file with one entry per chain using a short python script:
+    
+    ```
+    import pandas as pd
+    thimbleOut = pd.read_csv(<output file from stitchr/thimble>, sep="\t", dtype=str)
+    # Write amino acid sequecnes to FASTA, one entry per chain
+    with open(args.out_fasta, "w") as fh:
+        for _, row in thimbleOut.iterrows():
+            tcr_name = row["TCR_name"]
+            tra = row["TRA_aa"]
+            trb = row["TRB_aa"]
+
+            fh.write(f">{tcr_name}|TRA\n{tra}\n")
+            fh.write(f">{tcr_name}|TRB\n{trb}\n")
+   ```
 
 ### Missing files
 
 1. Single-end reads
 2. Methylated bams
 3. Unaligned bams
-4. Panel of Normals
-5. Ploidy files for ASCAT
-6. Mappability files for CONTROLFREEC
+4. Ploidy files for ASCAT
+5. Mappability files for CONTROLFREEC
