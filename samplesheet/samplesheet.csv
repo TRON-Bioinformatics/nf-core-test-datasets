@@ -1,6 +1,6 @@
 sample,fastq_1,fastq_2
-SAMPLE_PE_EQUAL,tests/data/ERR6503616_1_down1.fastq.gz,tests/data/ERR6503616_2_down1.fastq.gz
-SAMPLE_PE_UNEQUAL,tests/data/ERR6503616_1_down1.fastq.gz,tests/data/ERR6503616_2_down1_half.fastq.gz
-SAMPLE_PE_EMPTY,tests/data/empty.fastq.gz,tests/data/empty2.fastq.gz
-SAMPLE_SE,tests/data/ERR6503616_1_down1.fastq.gz,
-SAMPLE_SE_EMPTY,tests/data/empty3.fastq.gz,
+SAMPLE_PE_EQUAL,https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/ERR6503616_1_down1.fastq.gz,https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/ERR6503616_2_down1.fastq.gz
+SAMPLE_PE_UNEQUAL,https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/ERR6503616_1_down1.fastq.gz,https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/ERR6503616_2_down1_half.fastq.gz
+SAMPLE_PE_EMPTY,https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/empty.fastq.gz,https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/empty2.fastq.gz
+SAMPLE_SE,https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/ERR6503616_1_down1.fastq.gz,
+SAMPLE_SE_EMPTY,https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/empty3.fastq.gz,

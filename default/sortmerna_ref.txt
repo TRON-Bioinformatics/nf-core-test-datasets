@@ -1,0 +1,2 @@
+https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/E_coli_16S_23S.fasta
+https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/rfam-5.8s-database-id98.fasta.gz
