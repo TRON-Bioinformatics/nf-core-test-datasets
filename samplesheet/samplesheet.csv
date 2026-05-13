@@ -1,0 +1,6 @@
+sample,fastq_1,fastq_2
+SAMPLE_PE_EQUAL,tests/data/ERR6503616_1_down1.fastq.gz,tests/data/ERR6503616_2_down1.fastq.gz
+SAMPLE_PE_UNEQUAL,tests/data/ERR6503616_1_down1.fastq.gz,tests/data/ERR6503616_2_down1_half.fastq.gz
+SAMPLE_PE_EMPTY,tests/data/empty.fastq.gz,tests/data/empty2.fastq.gz
+SAMPLE_SE,tests/data/ERR6503616_1_down1.fastq.gz,
+SAMPLE_SE_EMPTY,tests/data/empty3.fastq.gz,
