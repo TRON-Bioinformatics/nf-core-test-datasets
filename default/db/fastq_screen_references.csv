@@ -1,0 +1,2 @@
+name,dir,basename,aligner
+Bacteria,https://raw.githubusercontent.com/TRON-Bioinformatics/test-datasets/qc_panda/default/db/fastq_screen_db.tar.gz,16srRNA.bacteria,bowtie
