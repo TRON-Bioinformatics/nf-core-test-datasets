@@ -1,0 +1,4 @@
+C	SRR001_1	Homo sapiens (taxid 9606)	150	9606:150
+U	SRR001_2	unclassified (taxid 0)	150	0:150
+C	SRR001_3	Homo sapiens (taxid 9606)	150	9606:150
+C	SRR001_4	Escherichia coli (taxid 562)	150	562:150

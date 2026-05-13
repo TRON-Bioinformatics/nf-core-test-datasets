@@ -1,0 +1,3 @@
+file	format	type	num_seqs	sum_len	min_len	avg_len	max_len	Q1	Q2	Q3	sum_gap	N50	N50_num	Q20(%)	Q30(%)	AvgQual	GC(%)	sum_n
+ERR6503616_1_down1.fastq.gz	FASTQ	DNA	10000	1697120	35	169.7	250	102.0	175.0	249.0	0	245	6	98.16	94.09	26.35	49.90	1470
+ERR6503616_2_down1_half.fastq.gz	FASTQ	DNA	5000	849514	35	169.9	250	102.0	176.0	249.0	0	246	5	96.26	90.45	24.01	50.07	735

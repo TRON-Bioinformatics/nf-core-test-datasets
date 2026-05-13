@@ -1,0 +1,4 @@
+{
+  "files": ["read1.fastq.gz", "read2.fastq.gz"],
+  "reads": 1000
+}
