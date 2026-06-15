@@ -1,0 +1,2 @@
+chromosome	start	end	gene	log2	depth	probes	weight
+chr22	0	46000	bin1,bin2,bin3,bin4,bin5,bin6	-0.268049	457.888	10	9.91888

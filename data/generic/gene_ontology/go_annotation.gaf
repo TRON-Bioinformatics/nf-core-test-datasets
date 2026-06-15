@@ -1,0 +1,13 @@
+!gaf-version: 2.1
+!
+!Mock GAF for testing enrichment tool
+!Generated: 2023-10-27
+!
+MockDB	A	GENE_A		GO:0000004	PMID:123	IMP	P		Metabolism Gene A	gene		taxon:9606	20231027	MockSource		
+MockDB	B	GENE_B		GO:0000004	PMID:123	IMP	P		Metabolism Gene B	gene		taxon:9606	20231027	MockSource		
+MockDB	C	GENE_C		GO:0000002	PMID:456	IDA	P		Metabolism Gene C	gene		taxon:9606	20231027	MockSource		
+MockDB	D	GENE_D		GO:0000001	PMID:789	TAS	P		General Gene D	gene		taxon:9606	20231027	MockSource		
+MockDB	E	GENE_E		GO:0000001	PMID:789	TAS	P		General Gene E	gene		taxon:9606	20231027	MockSource		
+MockDB	X	GENE_X		GO:0000005	PMID:101	IMP	P		Defense Gene X	gene		taxon:9606	20231027	MockSource		
+MockDB	Y	GENE_Y		GO:0000005	PMID:101	IMP	P		Defense Gene Y	gene		taxon:9606	20231027	MockSource		
+MockDB	Z	GENE_Z		GO:0000003	PMID:202	IDA	P		Defense Gene Z	gene		taxon:9606	20231027	MockSource		

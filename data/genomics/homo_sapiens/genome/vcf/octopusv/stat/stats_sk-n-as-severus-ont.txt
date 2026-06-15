@@ -1,0 +1,87 @@
+OctopusV report
+----------------------------------------
+
+>>>>>>> Input
+
+input file = /genomics/homo_sapiens/genome/vcf/octopusv/sk-n-as-severus-ont.svcf
+output file = stats.txt
+
+>>>>>>> Type Analysis
+
+SV Type Analysis               = 
+TRA                            = 29 (82.86%)
+INS                            = 1 (2.86%)
+DEL                            = 5 (14.29%)
+
+
+>>>>>>> Size Analysis
+
+Total SVs analyzed             = 35
+Minimum size                   = 50 bp
+Maximum size                   = 158451309 bp
+Mean size                      = 41147706.17 bp
+Median size                    = 17793677 bp
+Standard deviation             = 47402961.78 bp
+
+Size distribution              = 
+>10 kb                         = 29
+0-50 bp                        = 5
+51-100 bp                      = 1
+
+
+>>>>>>> Chromosome Analysis
+
+Chromosome Distribution        = 
+chr11                          = 3 SVs (Density: 0.03 SVs/Mb)
+chr12                          = 2 SVs (Density: 0.02 SVs/Mb)
+chr1                           = 2 SVs (Density: 0.02 SVs/Mb)
+chr14                          = 1 SVs (Density: 0.01 SVs/Mb)
+chr16                          = 2 SVs (Density: 0.02 SVs/Mb)
+chr17                          = 4 SVs (Density: 0.04 SVs/Mb)
+chr3                           = 3 SVs (Density: 0.03 SVs/Mb)
+chr5                           = 1 SVs (Density: 0.01 SVs/Mb)
+chr16_KI270728v1_random        = 1 SVs (Density: 1000000.00 SVs/Mb)
+chr6                           = 2 SVs (Density: 0.02 SVs/Mb)
+chr21                          = 1 SVs (Density: 0.01 SVs/Mb)
+chr4                           = 2 SVs (Density: 0.02 SVs/Mb)
+chr7                           = 2 SVs (Density: 0.02 SVs/Mb)
+chr8                           = 1 SVs (Density: 0.01 SVs/Mb)
+chr9                           = 2 SVs (Density: 0.02 SVs/Mb)
+chr7_KI270805v1_alt            = 1 SVs (Density: 1000000.00 SVs/Mb)
+chr17_KI270907v1_alt           = 1 SVs (Density: 1000000.00 SVs/Mb)
+chr2_KI270772v1_alt            = 1 SVs (Density: 1000000.00 SVs/Mb)
+chr8_KI270816v1_alt            = 1 SVs (Density: 1000000.00 SVs/Mb)
+chr8_KI270901v1_alt            = 1 SVs (Density: 1000000.00 SVs/Mb)
+chr15_ML143371v1_fix           = 1 SVs (Density: 1000000.00 SVs/Mb)
+
+
+>>>>>>> Qc Analysis
+
+Quality Score (QUAL) Statistics = 
+Number of variants with QUAL   = 35
+Average QUAL                   = 60.00
+Median QUAL                    = 60.00
+Min QUAL                       = 60.00
+Max QUAL                       = 60.00
+Q1 QUAL                        = 60.00
+Q3 QUAL                        = 60.00
+
+Filter Status                  = 
+PASS                           = 35 (100.00%)
+
+Read Support Statistics        = 
+Number of variants with support info = 0
+Average Read Support           = 0.00
+Median Read Support            = 0.00
+Min Read Support               = 0.00
+Max Read Support               = 0.00
+Q1 Read Support                = 0.00
+Q3 Read Support                = 0.00
+
+
+>>>>>>> Genotype Analysis
+
+Genotype Distribution          = 
+0/1                            = 35 (100.00%)
+
+

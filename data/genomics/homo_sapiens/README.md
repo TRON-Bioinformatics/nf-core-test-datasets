@@ -104,6 +104,47 @@ samtools faidx ${REF_PATH}.fa.bgz chr21 chr22 | bgzip > ${REF_PATH}_chr21_22.fa.
 samtools faidx ${REF_PATH}_chr21_22.fa.gz
 rm ${REF_PATH}.fa.bgz*
 ```
+### Two bit compressed genome files (.2bit)
+
+The two bit compressed genome file was generated directly from `genome.fasta` in this repository.
+
+UCSC's `faToTwoBit` was downloaded:
+
+```bash
+wget https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit
+```
+
+Then the actual 2bit file was generated:
+
+```bash
+faToTwoBit genome.fasta genome.2bit
+```
+
+### Genome coordinates divided in 10kbp bins
+
+1. The binned version of 'genome.bed' from this repository was used to generate a BED of the interval divided into
+10kbp bins:
+
+```bash
+bedtools makewindows -b genome.bed -w 10000 > genome.bins_10kb.bed
+```
+
+2. bin names were added to the genome.bins_10kb.bed file:
+
+```bash
+awk '{print $0 "\tbin" NR}' genome.bins_10kb.bed > genome.bins_10kb_annotated.bed
+```
+### Coordinates of transcription start sites (TSS) 
+
+The list of TSS for hg38 was downloaded from the ENCODE project (release date 2021-02-05, [ID ENCFF766FGL](
+https://www.encodeproject.org/files/ENCFF766FGL/@@download/ENCFF766FGL.bed.gz)), sorted 
+with `bedtools` and limited to only chromosome 22:
+
+```bash
+wget https://www.encodeproject.org/files/ENCFF766FGL/@@download/ENCFF766FGL.bed.gz -O - | \
+  gunzip -c  | bedtools sort | \
+  grep "^chr22" > genome_tss.bed
+```
 
 ### SDF
 

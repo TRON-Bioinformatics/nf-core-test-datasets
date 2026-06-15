@@ -1,0 +1,31 @@
+format-version: 1.2
+default-namespace: mock_ontology
+
+[Term]
+id: GO:0000001
+name: cellular_process
+def: "A broad biological process."
+
+[Term]
+id: GO:0000002
+name: metabolic_process
+def: "Chemical reactions within a cell."
+is_a: GO:0000001 ! cellular_process
+
+[Term]
+id: GO:0000003
+name: defense_response
+def: "Response to external stimuli."
+is_a: GO:0000001 ! cellular_process
+
+[Term]
+id: GO:0000004
+name: carbohydrate_metabolism
+def: "Breaking down sugars."
+is_a: GO:0000002 ! metabolic_process
+
+[Term]
+id: GO:0000005
+name: viral_defense
+def: "Specific defense against viruses."
+is_a: GO:0000003 ! defense_response

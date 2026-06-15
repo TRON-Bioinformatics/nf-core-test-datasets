@@ -1,0 +1,5 @@
+SNP	A1	A2	CHR	POS	RSID	EffectAllele	OtherAllele	N	Z
+rs1	A	G	1	101	rs1	A	G	10000	0.5
+rs2	C	T	1	102	rs2	C	T	10000	-0.2
+rs3	A	C	1	201	rs3	A	C	10000	0.4
+rs4	G	T	1	202	rs4	G	T	10000	-0.1

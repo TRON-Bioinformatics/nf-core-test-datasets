@@ -1,0 +1,6 @@
+chromosome	start	end	gene	depth	log2
+chr22	3001	13000	Antitarget	0.969069	-0.0453281
+chr22	13001	23000	Antitarget	0.308641	-1.696
+chr22	26001	36000	Antitarget	0.996002	-0.0057799
+chr22	36001	46000	Antitarget	0.0609471	-4.0363
+

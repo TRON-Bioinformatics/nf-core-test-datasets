@@ -1,0 +1,12 @@
+format-version: 1.2
+ontology: mock_slim
+
+[Term]
+id: GO:0000002
+name: metabolic_process
+namespace: biological_process
+
+[Term]
+id: GO:0000003
+name: defense_response
+namespace: biological_process
