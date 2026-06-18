@@ -1,0 +1,21 @@
+transcript_id	trans_biotype	gene_biotype	tsl
+ENST00000624431	unprocessed_pseudogene	unprocessed_pseudogene	NA
+ENST00000424215	lncRNA	lncRNA	5
+ENST00000511072	protein_coding	protein_coding	5
+ENST00000607632	retained_intron	protein_coding	2
+ENST00000378391	protein_coding	protein_coding	1
+ENST00000514189	protein_coding	protein_coding	5
+ENST00000270722	protein_coding	protein_coding	1 (assigned to previous version 9)
+ENST00000512462	protein_coding_CDS_not_defined	protein_coding	1
+ENST00000463591	protein_coding	protein_coding	5
+ENST00000509860	protein_coding	protein_coding	5
+ENST00000378389	protein_coding_CDS_not_defined	protein_coding	5
+ENST00000606170	retained_intron	protein_coding	4
+ENST00000641871	lncRNA	lncRNA	NA
+ENST00000288774	protein_coding	protein_coding	1 (assigned to previous version 7)
+ENST00000447513	protein_coding	protein_coding	1 (assigned to previous version 6)
+ENST00000650293	nonsense_mediated_decay	protein_coding	NA
+ENST00000507596	protein_coding	protein_coding	5
+ENST00000510434	nonsense_mediated_decay	protein_coding	3
+ENST00000508384	protein_coding	protein_coding	3
+ENST00000515760	protein_coding_CDS_not_defined	protein_coding	4
