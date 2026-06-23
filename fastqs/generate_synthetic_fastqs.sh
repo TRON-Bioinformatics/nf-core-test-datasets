@@ -6,36 +6,21 @@ OUTDIR="synthetic_reads"
 
 mkdir -p "$OUTDIR"/{genes,fusions}
 
-echo "====================================="
-echo "Step 1: index FASTA"
-echo "====================================="
+echo "== Index FASTA =="
 samtools faidx "$FASTA"
-
-echo "====================================="
-echo "Step 2: define gene list (NO coordinates)"
-echo "====================================="
 
 GENES=(
   AKAP9 ALK ATF1 BRAF BRD4 CD74 EML4 ETV1 ETV6
   EWSR1 FLI1 HOOK3 NTRK3 NUTM1 RET ROS1 TMPRSS2
 )
 
-echo "====================================="
-echo "Step 3: build normal gene transcripts"
-echo "====================================="
+extract_gene() {
+  samtools faidx "$FASTA" "$1" 2>/dev/null \
+    | tail -n +2 \
+    | tr -d '\n'
+}
 
-for gene in "${GENES[@]}"; do
-  seq=$(samtools faidx "$FASTA" "$gene" | tail -n +2)
-
-  echo ">${gene}_normal" > "$OUTDIR/genes/${gene}.fa"
-  echo "$seq" >> "$OUTDIR/genes/${gene}.fa"
-done
-
-cat "$OUTDIR"/genes/*.fa > "$OUTDIR/all_genes.fa"
-
-echo "====================================="
-echo "Step 4: build fusion transcripts"
-echo "====================================="
+echo "== Build breakpoint fusion fragments =="
 
 FUSIONS=(
   "ALK EML4"
@@ -46,57 +31,103 @@ FUSIONS=(
   "TMPRSS2 ALK"
 )
 
+rm -f "$OUTDIR"/fusions/*.fa
+
 i=0
+
 for pair in "${FUSIONS[@]}"; do
-  g1=$(echo $pair | awk '{print $1}')
-  g2=$(echo $pair | awk '{print $2}')
 
-  seq1=$(samtools faidx "$FASTA" "$g1" | tail -n +2)
-  seq2=$(samtools faidx "$FASTA" "$g2" | tail -n +2)
+  g1=$(echo "$pair" | awk '{print $1}')
+  g2=$(echo "$pair" | awk '{print $2}')
 
-  mid1=$(( ${#seq1} / 2 ))
-  mid2=$(( ${#seq2} / 3 ))
+  seq1=$(extract_gene "$g1")
+  seq2=$(extract_gene "$g2")
 
-  fusion_seq="${seq1:0:$mid1}${seq2:$mid2}"
+  [[ -z "$seq1" || -z "$seq2" ]] && continue
 
-  echo ">fusion_${g1}_${g2}_${i}" > "$OUTDIR/fusions/fusion_${i}.fa"
-  echo "$fusion_seq" >> "$OUTDIR/fusions/fusion_${i}.fa"
+  bp1=$(( ${#seq1} / 2 ))
+  bp2=$(( ${#seq2} / 3 ))
 
-  i=$((i+1))
+  # 200 bp on each side of breakpoint
+  left_start=$(( bp1 - 200 ))
+  (( left_start < 0 )) && left_start=0
+
+  left_seq="${seq1:$left_start:200}"
+  right_seq="${seq2:$bp2:200}"
+
+  fusion_fragment="${left_seq}${right_seq}"
+
+  {
+    echo ">fusion_${g1}_${g2}_${i}"
+    echo "$fusion_fragment"
+  } > "$OUTDIR/fusions/fusion_${i}.fa"
+
+  ((i+=1))
 done
 
 cat "$OUTDIR"/fusions/*.fa > "$OUTDIR/all_fusions.fa"
 
-echo "====================================="
-echo "Step 5: combine transcriptome"
-echo "====================================="
+echo "== Simulate normal background reads =="
 
-cat "$OUTDIR/all_genes.fa" "$OUTDIR/all_fusions.fa" > "$OUTDIR/transcriptome.fa"
-
-echo "====================================="
-echo "Step 6: simulate reads"
-echo "====================================="
+# Keep background modest.
+# With a 4.4 Mb minigenome this produces ~40-60 MB gzipped FASTQs.
 
 art_illumina \
   -ss HS25 \
-  -i "$OUTDIR/all_genes.fa" \
-  -p -l 150 -f 30 -m 200 -s 10 -rs 42 \
+  -i "$FASTA" \
+  -p \
+  -l 150 \
+  -f 50 \
+  -m 250 \
+  -s 25 \
+  -rs 42 \
   -o "$OUTDIR/normal_"
+
+echo "== Simulate breakpoint-spanning fusion reads =="
+
+# High coverage on tiny breakpoint fragments
+# Generates many split/chimeric reads without huge files
 
 art_illumina \
   -ss HS25 \
   -i "$OUTDIR/all_fusions.fa" \
-  -p -l 150 -f 5 -m 200 -s 10 -rs 42 \
+  -p \
+  -l 150 \
+  -f 600 \
+  -m 250 \
+  -s 25 \
+  -rs 43 \
   -o "$OUTDIR/fusion_"
 
-echo "====================================="
-echo "Step 7: merge reads"
-echo "====================================="
+echo "== Merge =="
 
-cat "$OUTDIR/normal_1.fq" "$OUTDIR/fusion_1.fq" > "$OUTDIR/final_1.fq"
-cat "$OUTDIR/normal_2.fq" "$OUTDIR/fusion_2.fq" > "$OUTDIR/final_2.fq"
+cat \
+  "$OUTDIR/normal_1.fq" \
+  "$OUTDIR/fusion_1.fq" \
+  > "$OUTDIR/test_sample_R1.fastq"
 
-gzip -f "$OUTDIR/final_1.fq"
-gzip -f "$OUTDIR/final_2.fq"
+cat \
+  "$OUTDIR/normal_2.fq" \
+  "$OUTDIR/fusion_2.fq" \
+  > "$OUTDIR/test_sample_R2.fastq"
 
-echo "DONE"
+echo "== Compress =="
+
+gzip -f "$OUTDIR/test_sample_R1.fastq"
+gzip -f "$OUTDIR/test_sample_R2.fastq"
+
+echo
+echo "Final sizes:"
+du -h "$OUTDIR/test_sample_R1.fastq.gz"
+du -h "$OUTDIR/test_sample_R2.fastq.gz"
+
+echo
+echo "Read counts:"
+echo -n "R1: "
+zcat "$OUTDIR/test_sample_R1.fastq.gz" | awk 'END{print NR/4}'
+
+echo -n "R2: "
+zcat "$OUTDIR/test_sample_R2.fastq.gz" | awk 'END{print NR/4}'
+
+echo
+echo "Done"
