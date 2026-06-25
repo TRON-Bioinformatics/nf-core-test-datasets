@@ -1,0 +1,7 @@
+##description: minimal GTF for nf-test stubs
+chr1	HAVANA	gene	65419	71585	.	+	.	gene_id "ENSG00000186092"; gene_name "OR4F5"; gene_biotype "protein_coding";
+chr1	HAVANA	transcript	65419	71585	.	+	.	gene_id "ENSG00000186092"; transcript_id "ENST00000641515"; gene_name "OR4F5";
+chr1	HAVANA	exon	65419	65433	.	+	.	gene_id "ENSG00000186092"; transcript_id "ENST00000641515"; gene_name "OR4F5";
+chr1	HAVANA	gene	923923	944581	.	+	.	gene_id "ENSG00000187634"; gene_name "SAMD11"; gene_biotype "protein_coding";
+chr1	HAVANA	transcript	923923	944581	.	+	.	gene_id "ENSG00000187634"; transcript_id "ENST00000420190"; gene_name "SAMD11";
+chr1	HAVANA	exon	923923	924948	.	+	.	gene_id "ENSG00000187634"; transcript_id "ENST00000420190"; gene_name "SAMD11";

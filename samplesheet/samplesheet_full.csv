@@ -1,0 +1,2 @@
+sample,type,bam,bai
+RNA_FULL,RNA,https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.sorted.chr6.bam,https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/illumina/bam/test.rna.paired_end.sorted.chr6.bam.bai
